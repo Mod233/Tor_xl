@@ -14,7 +14,7 @@ def getLocalProxyInfo(configFile):
     cp.read(configFile)
     host = cp.get('local_proxy', 'host')
     port = cp.getint('local_proxy', 'port')
-    return (host,port)
+    return (host, port)
 
 
 def getTargetInfo(configFile):
@@ -22,14 +22,14 @@ def getTargetInfo(configFile):
     cp.read(configFile)
     host = cp.get('target', 'host')
     port = cp.getint('target', 'port')
-    return (host,port)
+    return (host, port)
 
 
-def relayTcpStream(socketA,socketB):
-    inputList =  [socketA,socketB]
+def relayTcpStream(socketA, socketB):
+    inputList =  [socketA, socketB]
     try:
         while True:
-            readyInput,readyOutput,readyException = select.select(inputList,[],[])
+            readyInput, readyOutput, readyException = select.select(inputList,[],[])
             for inSocket in readyInput:
                 if inSocket == socketA:
                     data = socketA.recv(BUFSIZ)
@@ -41,7 +41,7 @@ def relayTcpStream(socketA,socketB):
                     if not data:
                         break
                     socketA.send(data)
-    except Exception,e:
+    except Exception, e:
         print 'connection closed'
         socketA.close()
         socketB.close()
@@ -49,7 +49,7 @@ def relayTcpStream(socketA,socketB):
 
 def main():
     localAddr = getLocalProxyInfo(configFile)
-    tcpSerSock = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+    tcpSerSock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     tcpSerSock.bind(localAddr)
     tcpSerSock.listen(10)
     try:
@@ -59,15 +59,15 @@ def main():
             print '...connected from:', addr
             try:
                 dstAddr = getTargetInfo(configFile)
-                tcpClient = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+                tcpClient = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 tcpClient.connect(dstAddr)
-            except Exception,e:
+            except Exception, e:
                 print 'failed to connect to target'
                 tcpClient.close()
                 tcpCliSock.close()
             else:
-                thread.start_new_thread(relayTcpStream,(tcpCliSock,tcpClient))
-    except Exception,e:
+                thread.start_new_thread(relayTcpStream, (tcpCliSock, tcpClient))
+    except Exception, e:
         print 'unhandled error occours!'
         tcpSerSock.close()
 

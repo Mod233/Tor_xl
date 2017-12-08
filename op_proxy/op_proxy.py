@@ -14,7 +14,7 @@ def getLocalProxyInfo(configFile):
     cp.read(configFile)
     host = cp.get('local_proxy', 'host')
     port = cp.getint('local_proxy', 'port')
-    return (host,port)
+    return (host, port)
 
 
 def getOnionProxyInfo(configFile):
@@ -22,7 +22,7 @@ def getOnionProxyInfo(configFile):
     cp.read(configFile)
     host = cp.get('onion_proxy', 'host')
     port = cp.getint('onion_proxy', 'port')
-    return (host,port)
+    return (host, port)
 
 
 def getOnionDomainInfo(configFile):
@@ -30,14 +30,14 @@ def getOnionDomainInfo(configFile):
     cp.read(configFile)
     host = cp.get('onion_domain', 'host')
     port = cp.getint('onion_domain', 'port')
-    return (host,port)
+    return (host, port)
 
 
-def relayTcpStream(socketA,socketB):
-    inputList =  [socketA,socketB]
+def relayTcpStream(socketA, socketB):
+    inputList =  [socketA, socketB]
     try:
         while True:
-            readyInput,readyOutput,readyException = select.select(inputList,[],[])
+            readyInput, readyOutput, readyException = select.select(inputList, [], [])
             for inSocket in readyInput:
                 if inSocket == socketA:
                     data = socketA.recv(BUFSIZ)
@@ -49,7 +49,7 @@ def relayTcpStream(socketA,socketB):
                     if not data:
                         break
                     socketA.send(data)
-    except Exception,e:
+    except Exception, e:
         print 'connection closed'
         socketA.close()
         socketB.close()
@@ -57,7 +57,7 @@ def relayTcpStream(socketA,socketB):
 
 def main():
     localAddr = getLocalProxyInfo(configFile)
-    tcpSerSock = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+    tcpSerSock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     tcpSerSock.bind(localAddr)
     tcpSerSock.listen(10)
     try:
@@ -66,18 +66,18 @@ def main():
             tcpCliSock, addr = tcpSerSock.accept()
             print '...connected from:', addr
             try:
-                (opHost,opPort) = getOnionProxyInfo(configFile)
+                (opHost, opPort) = getOnionProxyInfo(configFile)
                 socketProxy = socks.socksocket()
-                socketProxy.set_proxy(socks.SOCKS5,opHost,opPort,True)
+                socketProxy.set_proxy(socks.SOCKS5, opHost, opPort, True)
                 onionDomainAddr = getOnionDomainInfo(configFile)
                 socketProxy.connect(onionDomainAddr)
-            except Exception,e:
+            except Exception, e:
                 print 'failed to connect to onion domain'
                 socketProxy.close()
                 tcpCliSock.close()
             else:
-                thread.start_new_thread(relayTcpStream,(tcpCliSock,socketProxy))
-    except Exception,e:
+                thread.start_new_thread(relayTcpStream, (tcpCliSock, socketProxy))
+    except Exception, e:
         print 'unhandled error occours!'
         tcpSerSock.close()
 
